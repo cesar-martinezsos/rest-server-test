@@ -10,11 +10,11 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'dev'
     // Base de datos
     //========================
 let urlDb
-let password = process.env.password || 'PMv1QrmroHDBb2yr';
+
 if (process.env.NODE_ENV === 'dev') {
     urlDb = 'mongodb://localhost:27017/cafe';
 } else {
-    urlDb = `mongodb+srv://cesar:${ password }@cluster0-tpv5o.mongodb.net/cafe`;
+    urlDb = process.env.MONGO_URI;
 }
 
 process.env.URLDB = urlDb;
