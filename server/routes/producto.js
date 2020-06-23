@@ -4,20 +4,20 @@ const { verificaToken } = require('../middlewares/autenticacion')
 const Producto = require('../models/producto')
 const _ = require('underscore')
 
-// ===========================
-// Obtener todos los productos
-// ===========================
+/* -------------------------------------------------------------------------- */
+/*                         Obtener todos los productos                        */
+/* -------------------------------------------------------------------------- */
 app.get('/productos', verificaToken, (req, res) => {
     //Trae todos los productos
     //populate usuario y categoria
     //paginado
-    let skip = req.query.skip;
-    let limit = req.query.limit;
+    let desde = Number(req.query.desde);
+    let limit = 5;
 
     Producto.find({ disponible: true })
         .populate('usuario', 'nombre email')
         .populate('categoria', 'descripcion')
-        .skip(skip)
+        .skip(desde)
         .limit(limit)
         .exec((err, productos) => {
             if (err) {
@@ -44,15 +44,18 @@ app.get('/productos', verificaToken, (req, res) => {
         });
 });
 
-// ===========================
-// Obtener un producto
-// ===========================
+/* -------------------------------------------------------------------------- */
+/*                             Obtener un producto                            */
+/* -------------------------------------------------------------------------- */
 app.get('/productos/:id', verificaToken, (req, res) => {
     //populate usuario y categoria
 
     let id = req.params.id;
 
-    Producto.findById(id, (err, producto) => {
+    Producto.findById(id)
+        .populate('categoria', 'descripcion')
+        .populate('usuario', 'nombre email')
+        .exec((err, producto) => {
             if (err) {
                 return res.status(500).json({
                     ok: false,
@@ -73,14 +76,38 @@ app.get('/productos/:id', verificaToken, (req, res) => {
                 ok: true,
                 producto
             });
-        })
-        .populate('categoria', 'descripcion')
-        .populate('usuario', 'nombre email');
+        });
 });
 
-// ===========================
-// Crear un producto
-// ===========================
+/* -------------------------------------------------------------------------- */
+/*                              Buscar productos                              */
+/* -------------------------------------------------------------------------- */
+app.get('/productos/buscar/:termino', verificaToken, (req, res) => {
+
+    let termino = req.params.termino;
+    let regex = new RegExp(termino, 'i');
+
+    Producto.find({ nombre: regex })
+        .populate('categoria', 'descripcion')
+        .exec((err, productos) => {
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    err
+                });
+            }
+
+            res.json({
+                ok: true,
+                productos
+            });
+        });
+
+})
+
+/* -------------------------------------------------------------------------- */
+/*                              Crea un producto                              */
+/* -------------------------------------------------------------------------- */
 app.post('/productos', verificaToken, (req, res) => {
     //Grabar usuario
     //Grabar el producto
@@ -111,15 +138,15 @@ app.post('/productos', verificaToken, (req, res) => {
     });
 });
 
-// ===========================
-// Actualizar los productos
-// ===========================
+/* -------------------------------------------------------------------------- */
+/*                           Actualizar un producto                           */
+/* -------------------------------------------------------------------------- */
 app.put('/productos/:id', verificaToken, (req, res) => {
 
     let id = req.params.id;
     let body = req.body;
 
-    let datos = _.pick(req.body, ['nombre', 'precioUni', 'descripcion', 'categoria', 'disponible']);
+    let datos = _.pick(body, ['nombre', 'precioUni', 'descripcion', 'categoria', 'disponible']);
 
 
     let options = {
@@ -151,9 +178,9 @@ app.put('/productos/:id', verificaToken, (req, res) => {
     });
 });
 
-// ===========================
-// Borrar el producto
-// ===========================
+/* -------------------------------------------------------------------------- */
+/*                              Borra un producto                             */
+/* -------------------------------------------------------------------------- */
 app.delete('/productos/:id', verificaToken, (req, res) => {
 
     let id = req.params.id;

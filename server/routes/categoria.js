@@ -133,7 +133,7 @@ app.put('/categoria/:id', verificaToken, (req, res) => {
 
         res.json({
             ok: true,
-            categoria: categoria
+            categoria
         });
     })
 
